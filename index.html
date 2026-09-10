@@ -859,11 +859,13 @@ function cycEnc(c){
     (c.zone||[]).map(function(v){return ("0"+(v||0).toString(16)).slice(-2)}).join("")+"~"+ky;
 }
 function cycDec(row){
-  var pr=row.split("~"), v=pr[0].split("-").map(function(x){return parseInt(x,10)||0}), c=blankCyc(), j=0;
-  PICKERS.forEach(function(p){ c[p.k]=v[j]||0; j++ });
-  c.dg=v[j]?String(v[j]):""; j++;
-  c.isReset=v[j]===1; j++;
-  c.at=v[j]===1?1:0;
+  var pr=row.split("~"), v=pr[0].split("-").map(function(x){return parseInt(x,10)||0}), c=blankCyc();
+  /* 末尾3つが 表示G・リセット・AT当選。旧版はピッカーの数が違うため後ろから読む */
+  var n=v.length;
+  PICKERS.forEach(function(p,i){ c[p.k]=v[i]||0 });
+  c.dg=v[n-3]?String(v[n-3]):"";
+  c.isReset=v[n-2]===1;
+  c.at=v[n-1]===1?1:0;
   (pr[1]||"").split(",").filter(Boolean).forEach(function(x){
     var q=x.split("."), i=parseInt(q[0],10);
     if(MODEITEMS[i]) c[MODEITEMS[i].k]=parseInt(q[1],10)||0;
@@ -891,7 +893,7 @@ function encode(){
   return "IX2p:"+a.join(".")+":"+acc+":"+S.cycles.map(cycEnc).join("_")+":"+cycEnc(S.cur);
 }
 function decode(txt){
-  var m=String(txt).replace(/[：]/g,":").replace(/\s+/g,"").match(/IX2[a-z]:([\d.]+):([\d.]*):([^:]*):([^:]*)/i);
+  var m=String(txt).replace(/[：]/g,":").replace(/\s+/g,"").match(/IX2[a-z]:([\d.]+):([^:]*):([^:]*):([^:]*)/i);
   if(!m) return null;
   var a=m[1].split(".").map(function(x){return parseInt(x,10)||0}), ks=flatKeys();
   /* 旧バージョンのコードは項目が少ないので、足りないぶんを0で埋める */
